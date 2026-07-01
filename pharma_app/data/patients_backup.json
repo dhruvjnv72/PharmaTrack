@@ -1,0 +1,67 @@
+{
+  "active": [
+    {
+      "id": "sample-001",
+      "name": "Rajesh Kumar",
+      "phone": "9876543210",
+      "doctor": "Dr. Sharma",
+      "area": "Sector 17, Chandigarh",
+      "product": "Metformin 500mg",
+      "diagnosis": "Type 2 Diabetes",
+      "medicine": "Metformin 500mg BD",
+      "rep": "Rep 1",
+      "notes": "Patient responds well. Monitor HbA1c next visit.",
+      "visit_date": "2026-05-04",
+      "followup_date": "2026-05-18",
+      "added_on": "2026-05-04"
+    },
+    {
+      "id": "sample-002",
+      "name": "Priya Singh",
+      "phone": "9812345678",
+      "doctor": "Dr. Mehta",
+      "area": "Panchkula",
+      "product": "Amlodipine 5mg",
+      "diagnosis": "Hypertension",
+      "medicine": "Amlodipine 5mg OD",
+      "rep": "Rep 2",
+      "notes": "BP was 145/90. Recheck on follow-up.",
+      "visit_date": "2026-05-10",
+      "followup_date": "2026-05-15",
+      "added_on": "2026-05-10"
+    },
+    {
+      "id": "sample-003",
+      "name": "Amit Verma",
+      "phone": "9988776655",
+      "doctor": "Dr. Gupta",
+      "area": "Mohali",
+      "product": "Atorvastatin 10mg",
+      "diagnosis": "Hyperlipidemia",
+      "medicine": "Atorvastatin 10mg HS",
+      "rep": "Manager",
+      "notes": "Cholesterol levels high. Diet counselling given.",
+      "visit_date": "2026-05-01",
+      "followup_date": "2026-06-01",
+      "added_on": "2026-05-01"
+    }
+  ],
+  "resolved": [
+    {
+      "id": "sample-old-001",
+      "name": "Sunita Devi",
+      "phone": "9876500001",
+      "doctor": "Dr. Sharma",
+      "area": "Sector 22, Chandigarh",
+      "product": "Azithromycin 500mg",
+      "diagnosis": "Respiratory Infection",
+      "medicine": "Azithromycin 500mg OD x 5 days",
+      "rep": "Rep 1",
+      "notes": "Patient recovered fully.",
+      "visit_date": "2026-04-10",
+      "followup_date": "2026-04-20",
+      "resolved_on": "2026-04-20",
+      "added_on": "2026-04-10"
+    }
+  ]
+}

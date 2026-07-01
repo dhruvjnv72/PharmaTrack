@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ profile.clinic_name or 'PharmaTrack' }}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+.nav{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,0.3)}
+.nav-brand{color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px}
+.nav-brand .clinic{font-size:18px;font-weight:800;color:#fff}
+.nav-brand .tagline{font-size:11px;color:#94a3b8;font-weight:400}
+.nav-brand-info{display:flex;flex-direction:column}
+.nav-logo{width:36px;height:36px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.nav-tabs{display:flex;gap:4px}
+.nav-tab{color:#94a3b8;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;border:none;background:none;transition:all 0.2s}
+.nav-tab:hover{color:#fff;background:rgba(255,255,255,0.08)}
+.nav-tab.active{color:#fff;background:#4f46e5}
+.btn-export{background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15);padding:7px 14px;border-radius:8px;font-size:12px;cursor:pointer;text-decoration:none;transition:all 0.2s}
+.btn-export:hover{background:rgba(255,255,255,0.15)}
+.main{max-width:1240px;margin:0 auto;padding:24px 20px}
+.section{display:none}.section.active{display:block}
+.page-title{font-size:22px;font-weight:800;color:#1a1a2e;margin-bottom:20px}
+.page-title span{font-size:14px;font-weight:500;color:#64748b;margin-left:8px}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat{background:#fff;border-radius:16px;padding:20px 22px;position:relative;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.stat.overdue::before{background:linear-gradient(90deg,#ef4444,#f87171)}
+.stat.today::before{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.stat.upcoming::before{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+.stat.resolved::before{background:linear-gradient(90deg,#10b981,#34d399)}
+.stat-icon{font-size:28px;margin-bottom:8px}
+.stat-value{font-size:36px;font-weight:800;color:#1a1a2e;line-height:1}
+.stat-label{font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-top:6px}
+.stat-sub{font-size:11px;color:#94a3b8;margin-top:4px}
+
+/* CARDS */
+.card{background:#fff;border-radius:16px;padding:24px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.card-title{font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.badge-red{background:#fee2e2;color:#dc2626}
+.badge-yellow{background:#fef3c7;color:#d97706}
+.badge-blue{background:#dbeafe;color:#2563eb}
+.badge-green{background:#d1fae5;color:#059669}
+.badge-gray{background:#f1f5f9;color:#475569}
+.badge-purple{background:#ede9fe;color:#5b21b6}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px}
+.form-group input,.form-group select,.form-group textarea{padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;color:#1a1a2e;transition:border-color 0.2s;background:#f8fafc;font-family:inherit}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#4f46e5;background:#fff;box-shadow:0 0 0 3px rgba(79,70,229,0.1)}
+.form-group textarea{resize:vertical;min-height:75px}
+.btn-submit{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;margin-top:8px}
+.btn-submit:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(79,70,229,0.4)}
+
+/* COUNTER */
+.counter-group{display:flex;align-items:center;gap:0;border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden;background:#f8fafc;width:fit-content}
+.counter-btn{background:none;border:none;padding:8px 14px;font-size:18px;cursor:pointer;color:#4f46e5;font-weight:700;transition:background 0.15s}
+.counter-btn:hover{background:#ede9fe}
+.counter-val{padding:8px 16px;font-size:16px;font-weight:700;color:#1a1a2e;min-width:48px;text-align:center;background:#fff;border-left:1.5px solid #e2e8f0;border-right:1.5px solid #e2e8f0}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.filter-btn{padding:7px 16px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;color:#64748b}
+.filter-btn:hover{border-color:#4f46e5;color:#4f46e5}
+.filter-btn.active{background:#4f46e5;border-color:#4f46e5;color:#fff}
+.search-box{flex:1;min-width:200px;padding:8px 16px;border:1.5px solid #e2e8f0;border-radius:20px;font-size:14px;background:#fff;color:#1a1a2e}
+.search-box:focus{outline:none;border-color:#4f46e5}
+.date-filter-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:#f8fafc;border-radius:12px;border:1.5px solid #e2e8f0}
+.date-filter-row label{font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap}
+.date-input{padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff;color:#1a1a2e}
+.date-input:focus{outline:none;border-color:#4f46e5}
+.btn-clear{padding:7px 14px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;font-size:12px;cursor:pointer;color:#64748b;font-weight:600}
+.btn-clear:hover{background:#fee2e2;border-color:#fca5a5;color:#dc2626}
+.count-label{font-size:13px;font-weight:700;color:#4f46e5}
+
+/* TABLE */
+.patient-table{width:100%;border-collapse:collapse}
+.patient-table th{text-align:left;padding:10px 13px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#94a3b8;border-bottom:2px solid #f1f5f9}
+.patient-table td{padding:13px;font-size:13px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+.patient-table tr:last-child td{border-bottom:none}
+.patient-table tr:hover td{background:#fafbff}
+.patient-name{font-weight:700;color:#1a1a2e;font-size:14px}
+.patient-detail{font-size:11px;color:#64748b;margin-top:2px}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.pill-overdue{background:#fee2e2;color:#dc2626}
+.pill-today{background:#fef3c7;color:#d97706;animation:pulse 2s infinite}
+.pill-upcoming{background:#dbeafe;color:#2563eb}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.quick-date-btn{padding:4px 10px;border-radius:6px;border:1.5px solid #c7d2fe;background:#ede9fe;font-size:11px;cursor:pointer;font-weight:700;color:#4f46e5;transition:all 0.15s}
+.quick-date-btn:hover{background:#4f46e5;color:#fff;border-color:#4f46e5}
+
+/* BUTTONS */
+.btn-resolve{background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-resolve:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(16,185,129,0.4)}
+.btn-unresolve{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-unresolve:hover{transform:translateY(-1px)}
+.btn-eye{background:#ede9fe;color:#5b21b6;border:none;padding:6px 10px;border-radius:7px;font-size:12px;cursor:pointer;margin-left:5px;transition:all 0.2s}
+.btn-eye:hover{background:#ddd6fe}
+.rep-tag{display:inline-block;background:#ede9fe;color:#5b21b6;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.followup-count-tag{display:inline-block;background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.tag-new{display:inline-block;background:#dcfce7;color:#15803d;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.3px}
+.tag-regular{display:inline-block;background:#dbeafe;color:#1d4ed8;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.3px}
+
+/* EMPTY */
+.empty{text-align:center;padding:60px 20px;color:#94a3b8}
+.empty-icon{font-size:52px;margin-bottom:12px}
+.empty p{font-size:15px;margin-bottom:4px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px;padding:28px;max-width:640px;width:92%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-size:20px;font-weight:800;color:#1a1a2e}
+.modal-close{background:#f1f5f9;border:none;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.detail-item{padding:12px 14px;background:#f8fafc;border-radius:10px;border:1px solid #f1f5f9}
+.detail-label{font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.detail-value{font-size:14px;color:#1a1a2e;font-weight:500;word-break:break-word}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#10b981;color:#fff;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:600;z-index:999;transform:translateY(100px);opacity:0;transition:all 0.3s;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* PROFILE */
+.profile-card{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);border-radius:20px;padding:28px;color:#fff;margin-bottom:20px}
+.profile-name{font-size:26px;font-weight:800;margin-bottom:4px}
+.profile-sub{font-size:14px;opacity:0.8}
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+.profile-stat{background:rgba(255,255,255,0.15);border-radius:12px;padding:14px;text-align:center}
+.profile-stat-val{font-size:28px;font-weight:800}
+.profile-stat-label{font-size:12px;opacity:0.8;margin-top:2px}
+
+@media(max-width:768px){.stats{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:1fr}.nav-tabs{display:none}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-logo">💊</div>
+    <div class="nav-brand-info">
+      <span class="clinic">{{ profile.clinic_name or 'PharmaTrack' }}</span>
+      {% if profile.tagline %}<span class="tagline">{{ profile.tagline }}</span>{% endif %}
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('dashboard',this)">📊 Dashboard</button>
+    <button class="nav-tab" onclick="showSection('add',this)">➕ Add Patient</button>
+    <button class="nav-tab" onclick="showSection('followups',this)">📋 Follow-ups</button>
+    <button class="nav-tab" onclick="showSection('resolved',this)">✅ Resolved</button>
+    <button class="nav-tab" onclick="showSection('settings',this)">⚙️ Settings</button>
+  </div>
+  <a href="/export" class="btn-export">⬇ Export</a>
+</nav>
+
+<div class="main">
+
+<!-- ===== DASHBOARD ===== -->
+<div id="section-dashboard" class="section active">
+  <!-- 3-DAY MINI DASHBOARD -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
+    {% for day_info in upcoming_days %}
+    <div style="background:#fff;border-radius:14px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border-top:3px solid {{ day_info.color }}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#64748b">{{ day_info.label }} — {{ day_info.date_display }}</div>
+        <span style="background:{{ day_info.bg }};color:{{ day_info.color }};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">{{ day_info.count }} patients</span>
+      </div>
+      <div style="font-size:13px;color:#475569;max-height:140px;overflow-y:auto">
+        {% if day_info.patients %}
+          {% for p in day_info.patients %}
+          <div style="padding:5px 0;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:600;font-size:13px">{{ p.name }}</div>
+              <div style="font-size:11px;color:#94a3b8">{{ p.phone or '' }}</div>
+            </div>
+            <button onclick="viewPatient('{{ p.id }}')" style="background:{{ day_info.bg }};color:{{ day_info.color }};border:none;padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:700">👁</button>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="color:#94a3b8;font-size:12px;padding:8px 0">No follow-ups scheduled</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="stats">
+    <div class="stat overdue">
+      <div class="stat-icon">🔴</div>
+      <div class="stat-value">{{ overdue_count }}</div>
+      <div class="stat-label">Overdue</div>
+      <div class="stat-sub">Need immediate attention</div>
+    </div>
+    <div class="stat today">
+      <div class="stat-icon">🟡</div>
+      <div class="stat-value">{{ today_count }}</div>
+      <div class="stat-label">Today</div>
+      <div class="stat-sub">Follow-ups due today</div>
+    </div>
+    <div class="stat upcoming">
+      <div class="stat-icon">🔵</div>
+      <div class="stat-value">{{ upcoming_count }}</div>
+      <div class="stat-label">Upcoming</div>
+      <div class="stat-sub">Future follow-ups</div>
+    </div>
+    <div class="stat resolved">
+      <div class="stat-icon">🟢</div>
+      <div class="stat-value">{{ total_resolved }}</div>
+      <div class="stat-label">Resolved</div>
+      <div class="stat-sub">Cases closed</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      📅 Today's Follow-up List
+      <span class="badge badge-yellow">{{ today_count }} today</span>
+      {% if overdue_count > 0 %}<span class="badge badge-red">{{ overdue_count }} overdue</span>{% endif %}
+    </div>
+    {% set urgent = patients | selectattr('status','in',['today','overdue']) | list %}
+    {% if urgent %}
+    <table class="patient-table">
+      <thead><tr><th>Patient</th><th>Phone</th><th>UHID</th><th>Age/Sex</th><th>Status</th><th>Visits</th><th>Action</th></tr></thead>
+      <tbody>
+      {% for p in urgent %}
+      <tr id="row-{{ p.id }}">
+        <td>
+          <div class="patient-name">{{ p.name }}
+            {% if p.get('followup_count',1)|int == 1 %}
+            <span class="tag-new">🆕 New</span>
+            {% else %}
+            <span class="tag-regular">🔄 Regular</span>
+            {% endif %}
+          </div>
+          <div class="patient-detail">📍 {{ p.area }}</div>
+        </td>
+        <td><div style="font-weight:600">{{ p.phone or '—' }}</div></td>
+        <td><div class="badge badge-purple">{{ p.uhid or '—' }}</div></td>
+        <td>{{ p.age or '—' }}y / {{ p.sex or '—' }}</td>
+        <td>
+          {% if p.status == 'overdue' %}<span class="pill pill-overdue">🔴 Overdue</span>
+          {% else %}<span class="pill pill-today">🟡 Today</span>{% endif %}
+        </td>
+        <td><span class="followup-count-tag">{{ p.get('followup_count',1) }}x</span></td>
+        <td>
+          <button class="btn-resolve" onclick="resolvePatient('{{ p.id }}')">✓ Done</button>
+          <button class="btn-eye" onclick="viewPatient('{{ p.id }}')">👁</button>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><div class="empty-icon">🎉</div><p>No follow-ups due today!</p><p style="font-size:13px">You're all caught up.</p></div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ===== ADD PATIENT ===== -->
+<div id="section-add" class="section">
+  <div class="card">
+    <div class="card-title">➕ Add New Patient Visit</div>
+    <form method="POST" action="/add_patient">
+      <div class="form-grid">
+        <div class="form-group"><label>Patient Name *</label><input type="text" name="name" placeholder="Full name" required></div>
+        <div class="form-group"><label>UHID No</label><input type="text" name="uhid" placeholder="e.g. EH/1172"></div>
+        <div class="form-group"><label>Old / New</label><select name="old_new"><option value="New">New</option><option value="Old">Old</option></select></div>
+        <div class="form-group"><label>Age</label><input type="number" name="age" placeholder="Age" min="0" max="120"></div>
+        <div class="form-group"><label>Sex</label><select name="sex"><option value="">Select</option><option value="M">Male</option><option value="F">Female</option><option value="Other">Other</option></select></div>
+        <div class="form-group"><label>Phone Number</label><input type="tel" name="phone" placeholder="Mobile number"></div>
+        <div class="form-group"><label>Doctor Name</label><input type="text" name="doctor" placeholder="Dr. name"></div>
+        <div class="form-group"><label>Area / Address</label><input type="text" name="area" placeholder="City / area"></div>
+        <div class="form-group"><label>Product Discussed</label><input type="text" name="product" placeholder="Medicine / product"></div>
+        <div class="form-group"><label>Rep Name</label><select name="rep">{% for rep in reps %}<option>{{ rep }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label>Diagnosis</label><input type="text" name="diagnosis" placeholder="Patient diagnosis"></div>
+        <div class="form-group"><label>Medicine Prescribed</label><input type="text" name="medicine" placeholder="Medicine & dosage"></div>
+        <div class="form-group"><label>Visit Date *</label><input type="date" name="visit_date" value="{{ today }}" required></div>
+        <div class="form-group"><label>Current Status</label><input type="text" name="current_status" placeholder="e.g. Stable, Critical"></div>
+        <div class="form-group">
+          <label>Number of Follow-ups</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+            <div class="counter-group">
+              <button type="button" class="counter-btn" onclick="changeCount(-1)">−</button>
+              <span class="counter-val" id="count-display">1</span>
+              <button type="button" class="counter-btn" onclick="changeCount(1)">+</button>
+            </div>
+            <input type="hidden" name="followup_count" id="followup_count" value="1">
+            <span style="font-size:12px;color:#64748b">follow-up dates</span>
+          </div>
+        </div>
+        <div class="form-group full" id="followup-dates-container">
+          <label>Follow-up Date(s) *</label>
+          <div id="followup-date-inputs" style="display:flex;flex-direction:column;gap:10px;margin-top:6px"></div>
+        </div>
+        <div class="form-group full"><label>Remarks / Notes</label><textarea name="notes" placeholder="Notes, observations, instructions..."></textarea></div>
+      </div>
+      <input type="hidden" name="visit_dates" id="visit_dates_hidden">
+      <button type="submit" class="btn-submit" onclick="prepareAddForm()">💾 Save Patient &amp; Schedule Follow-up</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== FOLLOW-UPS ===== -->
+<div id="section-followups" class="section">
+  <div class="card">
+    <div class="card-title">📋 Active Follow-ups <span class="badge badge-gray">{{ total_active }} total</span></div>
+    <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+      <input class="search-box" type="text" id="fu-search" style="flex:2;min-width:200px" placeholder="🔍 Search name, UHID, phone, area, diagnosis..." oninput="fuFilter()">
+      <select id="fu-diagnosis" onchange="fuFilter()" style="padding:8px 14px;border:1.5px solid #e2e8f0;border-radius:20px;font-size:13px;background:#fff;color:#1a1a2e;font-weight:600;flex:1;min-width:160px">
+        <option value="">All Diagnoses</option>
+        {% set diagnoses = patients | map(attribute='diagnosis') | select | unique | sort | list %}
+        {% for d in diagnoses %}{% if d %}<option value="{{ d | lower }}">{{ d }}</option>{% endif %}{% endfor %}
+      </select>
+    </div>
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="fuStatusFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="fuStatusFilter('overdue',this)">🔴 Overdue</button>
+      <button class="filter-btn" onclick="fuStatusFilter('today',this)">🟡 Today</button>
+      <button class="filter-btn" onclick="fuStatusFilter('upcoming',this)">🔵 Upcoming</button>
+    </div>
+    <div class="date-filter-row">
+      <label>📅 Date range:</label>
+      <input type="date" class="date-input" id="fu-from" onchange="fuFilter()">
+      <span style="font-size:13px;color:#64748b">to</span>
+      <input type="date" class="date-input" id="fu-to" onchange="fuFilter()">
+      <button class="btn-clear" onclick="clearFuDate()">✕ Clear</button>
+      <span class="count-label" id="fu-count"></span>
+    </div>
+    {% if patients %}
+    <table class="patient-table" id="fu-table">
+      <thead><tr><th>Patient</th><th>Phone / UHID</th><th>Age / Sex</th><th>Area</th><th>Follow-up Date</th><th>Status</th><th>Visits</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for p in patients %}
+      <tr id="row-{{ p.id }}" data-status="{{ p.status }}" data-followup="{{ p.followup_date }}" data-search="{{ (p.name ~ p.phone ~ p.uhid ~ p.area ~ p.rep ~ p.diagnosis) | lower }}">
+        <td><div class="patient-name">{{ p.name }} {% if p.get('followup_count',1)|int == 1 %}<span class="tag-new">🆕 New</span>{% else %}<span class="tag-regular">🔄 Regular</span>{% endif %}</div><div class="patient-detail">{{ p.diagnosis or '' }}</div></td>
+        <td><div style="font-weight:600">{{ p.phone or '—' }}</div><div class="patient-detail">{{ p.uhid or '' }}</div></td>
+        <td>{{ p.age or '—' }}y / {{ p.sex or '—' }}</td>
+        <td style="max-width:140px;font-size:12px">{{ p.area or '—' }}</td>
+        <td><strong>{{ p.followup_date }}</strong>{% if p.get('followup_label') %}<br><span style="font-size:11px;color:#7c3aed;font-weight:600">{{ p.followup_label }}</span>{% endif %}</td>
+        <td>
+          {% if p.status=='overdue' %}<span class="pill pill-overdue">🔴 Overdue</span>
+          {% elif p.status=='today' %}<span class="pill pill-today">🟡 Today</span>
+          {% else %}<span class="pill pill-upcoming">🔵 Upcoming</span>{% endif %}
+        </td>
+        <td><span class="followup-count-tag">{{ p.get('followup_count',1) }}x</span></td>
+        <td>
+          <button class="btn-resolve" onclick="resolvePatient('{{ p.id }}')">✓ Resolve</button>
+          <button class="btn-eye" onclick="viewPatient('{{ p.id }}')">👁</button>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><div class="empty-icon">📭</div><p>No active follow-ups.</p></div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ===== RESOLVED ===== -->
+<div id="section-resolved" class="section">
+  <div class="card">
+    <div class="card-title">✅ Resolved / Closed Cases <span class="badge badge-green">{{ total_resolved }} cases</span></div>
+    <div class="filter-bar">
+      <input class="search-box" type="text" id="res-search" placeholder="🔍 Search resolved patients..." oninput="resFilter()">
+    </div>
+    <div class="date-filter-row">
+      <label>📅 Resolved date range:</label>
+      <input type="date" class="date-input" id="res-from" onchange="resFilter()">
+      <span style="font-size:13px;color:#64748b">to</span>
+      <input type="date" class="date-input" id="res-to" onchange="resFilter()">
+      <button class="btn-clear" onclick="clearResDate()">✕ Clear</button>
+      <span class="count-label" id="res-count"></span>
+    </div>
+    {% if resolved %}
+    <table class="patient-table" id="res-table">
+      <thead><tr><th>Patient</th><th>Phone / UHID</th><th>Age / Sex</th><th>Area</th><th>Follow-up Was</th><th>Resolved On</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for p in resolved | reverse %}
+      <tr id="rrow-{{ p.id }}" data-resolved="{{ p.resolved_on or '' }}" data-search="{{ (p.name ~ p.phone ~ p.uhid ~ p.area) | lower }}">
+        <td><div class="patient-name">{{ p.name }} {% if p.get('followup_count',1)|int == 1 %}<span class="tag-new">🆕 New</span>{% else %}<span class="tag-regular">🔄 Regular</span>{% endif %}</div><div class="patient-detail">{{ p.diagnosis or '' }}</div></td>
+        <td><div style="font-weight:600">{{ p.phone or '—' }}</div><div class="patient-detail">{{ p.uhid or '' }}</div></td>
+        <td>{{ p.age or '—' }}y / {{ p.sex or '—' }}</td>
+        <td style="max-width:140px;font-size:12px">{{ p.area or '—' }}</td>
+        <td>{{ p.followup_date or '—' }}</td>
+        <td><span class="badge badge-green">{{ p.resolved_on or '—' }}</span></td>
+        <td>
+          <button class="btn-unresolve" onclick="unresolvePatient('{{ p.id }}')">↩ Reopen</button>
+          <button class="btn-eye" onclick="viewPatient('{{ p.id }}')">👁</button>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><div class="empty-icon">📁</div><p>No resolved cases yet.</p></div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ===== SETTINGS ===== -->
+<div id="section-settings" class="section">
+  <div class="profile-card">
+    <div class="profile-name">{{ profile.clinic_name or 'Your Clinic' }}</div>
+    <div class="profile-sub">{{ profile.user_name or 'Set your name below' }} {% if profile.contact %}· {{ profile.contact }}{% endif %}</div>
+    {% if profile.address %}<div class="profile-sub" style="margin-top:4px">📍 {{ profile.address }}</div>{% endif %}
+    <div class="profile-stats">
+      <div class="profile-stat"><div class="profile-stat-val">{{ total_active }}</div><div class="profile-stat-label">Active Patients</div></div>
+      <div class="profile-stat"><div class="profile-stat-val">{{ total_resolved }}</div><div class="profile-stat-label">Resolved</div></div>
+      <div class="profile-stat"><div class="profile-stat-val">{{ today_count }}</div><div class="profile-stat-label">Due Today</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">👤 Your Profile & Clinic Info</div>
+    <form method="POST" action="/save_profile">
+      <div class="form-grid">
+        <div class="form-group"><label>Clinic / App Name</label><input type="text" name="clinic_name" value="{{ profile.clinic_name or '' }}" placeholder="e.g. City Pharma Agency"></div>
+        <div class="form-group"><label>Your Name</label><input type="text" name="user_name" value="{{ profile.user_name or '' }}" placeholder="e.g. Dr. Sharma"></div>
+        <div class="form-group"><label>Contact Number</label><input type="text" name="contact" value="{{ profile.contact or '' }}" placeholder="Phone number"></div>
+        <div class="form-group full"><label>Address</label><input type="text" name="address" value="{{ profile.address or '' }}" placeholder="Clinic address"></div>
+        <div class="form-group full"><label>Tagline (shown in header)</label><input type="text" name="tagline" value="{{ profile.tagline or '' }}" placeholder="e.g. Patient Follow-up Manager"></div>
+      </div>
+      <button type="submit" class="btn-submit">💾 Save Profile</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📱 WhatsApp Morning Alert</div>
+    <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:18px;font-size:14px;color:#166534;line-height:1.8">
+      Run <strong>whatsapp_alert.py</strong> to get daily WhatsApp alerts at 8 AM with today's follow-up list.<br>
+      Setup instructions are inside the file. Sign up free at <strong>twilio.com</strong>.
+    </div>
+  </div>
+</div>
+
+</div><!-- end main -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Patient Details</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="detail-grid" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var fuStatusActive = 'all';
+
+function showSection(name, btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('section-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+function showToast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.background = color||'#10b981';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+// Quick date helpers
+function addDays(days) {
+  const d = new Date(); d.setDate(d.getDate()+days);
+  return d.toISOString().split('T')[0];
+}
+
+// Render dynamic follow-up date pickers
+function renderFollowupDateInputs(count) {
+  const container = document.getElementById('followup-date-inputs');
+  const existing = [];
+  container.querySelectorAll('input[type=date]').forEach(i => existing.push(i.value));
+  container.innerHTML = '';
+  for(let i = 0; i < count; i++) {
+    const label = count === 1 ? 'Follow-up Date' : `Follow-up ${i+1}`;
+    const inputName = i === 0 ? 'followup_date' : `followup_date_${i+1}`;
+    const val = existing[i] || '';
+    const div = document.createElement('div');
+    div.style.cssText = 'background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;';
+    div.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">${label}</div>
+      <input type="date" name="${inputName}" value="${val}" ${i===0?'required':''} style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;color:#1a1a2e;background:#fff;width:180px">
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">
+        ${[[7,'+1W'],[14,'+2W'],[21,'+3W'],[30,'+1M'],[42,'+6W'],[60,'+2M']].map(([d,l])=>
+          `<button type="button" onclick="setDateInput(this,${d})" class="quick-date-btn">${l}</button>`
+        ).join('')}
+      </div>
+    `;
+    container.appendChild(div);
+  }
+}
+
+// Set date on a quick-btn click
+function setDateInput(btn, days) {
+  const input = btn.closest('div[style]').querySelector('input[type=date]');
+  if(input) input.value = addDays(days);
+}
+
+// Ensure dynamic date inputs have correct names before form submit
+function prepareAddForm() {
+  const container = document.getElementById('followup-date-inputs');
+  if(container) {
+    container.querySelectorAll('input[type=date]').forEach((inp, i) => {
+      inp.name = i === 0 ? 'followup_date' : `followup_date_${i+1}`;
+    });
+  }
+}
+
+// Counter for follow-up count
+function changeCount(delta) {
+  const el = document.getElementById('count-display');
+  const inp = document.getElementById('followup_count');
+  let val = parseInt(el.textContent) + delta;
+  if(val < 1) val = 1; if(val > 10) val = 10;
+  el.textContent = val; inp.value = val;
+  renderFollowupDateInputs(val);
+}
+
+// Init on page load
+document.addEventListener('DOMContentLoaded', () => renderFollowupDateInputs(1));
+
+// Resolve
+function resolvePatient(id) {
+  if(!confirm('Mark this patient as resolved and move to archive?')) return;
+  fetch('/resolve/'+id, {method:'POST'}).then(r=>r.json()).then(d=>{
+    if(d.success){ document.getElementById('row-'+id)?.remove(); showToast('✅ Patient resolved!'); setTimeout(()=>location.reload(),1500); }
+  });
+}
+
+// Unresolve
+function unresolvePatient(id) {
+  if(!confirm('Reopen this case and move back to active follow-ups?')) return;
+  fetch('/unresolve/'+id, {method:'POST'}).then(r=>r.json()).then(d=>{
+    if(d.success){ document.getElementById('rrow-'+id)?.remove(); showToast('↩ Patient reopened!','#f59e0b'); setTimeout(()=>location.reload(),1500); }
+  });
+}
+
+// View patient
+function viewPatient(id) {
+  fetch('/patient/'+id).then(r=>r.json()).then(p=>{
+    document.getElementById('modal-title').textContent = '👤 '+p.name;
+    const e = v => (v||'—').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    document.getElementById('modal-body').innerHTML = `
+      <div class="detail-item"><div class="detail-label">Phone</div><div class="detail-value">${e(p.phone)}</div></div>
+      <div class="detail-item"><div class="detail-label">UHID No</div><div class="detail-value">${e(p.uhid)}</div></div>
+      <div class="detail-item"><div class="detail-label">Old / New</div><div class="detail-value">${e(p.old_new)}</div></div>
+      <div class="detail-item"><div class="detail-label">Age / Sex</div><div class="detail-value">${e(p.age)} yrs / ${e(p.sex)}</div></div>
+      <div class="detail-item"><div class="detail-label">Doctor</div><div class="detail-value">${e(p.doctor)}</div></div>
+      <div class="detail-item"><div class="detail-label">Area / Address</div><div class="detail-value">${e(p.area)}</div></div>
+      <div class="detail-item"><div class="detail-label">Product</div><div class="detail-value">${e(p.product)}</div></div>
+      <div class="detail-item"><div class="detail-label">Medicine</div><div class="detail-value">${e(p.medicine)}</div></div>
+      <div class="detail-item"><div class="detail-label">Diagnosis</div><div class="detail-value">${e(p.diagnosis)}</div></div>
+      <div class="detail-item"><div class="detail-label">Current Status</div><div class="detail-value">${e(p.current_status)}</div></div>
+      <div class="detail-item"><div class="detail-label">Visit Date</div><div class="detail-value">${e(p.visit_date)}</div></div>
+      <div class="detail-item"><div class="detail-label">Follow-up Date</div><div class="detail-value">${e(p.followup_date)}</div></div>
+      <div class="detail-item"><div class="detail-label">Follow-up Count</div><div class="detail-value">${e(p.followup_count)} visits &nbsp; ${parseInt(p.followup_count)||1 === 1 ? '<span class="tag-new">🆕 New Patient</span>' : '<span class="tag-regular">🔄 Regular Patient</span>'}</div></div>
+      <div class="detail-item"><div class="detail-label">Added On</div><div class="detail-value">${e(p.added_on)}</div></div>
+      <div class="detail-item" style="grid-column:1/-1"><div class="detail-label">Remarks / Notes</div><div class="detail-value">${e(p.notes)}</div></div>
+      <div class="detail-item" style="grid-column:1/-1">
+        <div class="detail-label">Visit History (${(p.visit_history||[]).length} visits)</div>
+        <div class="detail-value">
+          ${(p.visit_history && p.visit_history.length > 0)
+            ? p.visit_history.map((v,i) => `<span style="display:inline-block;background:#ede9fe;color:#5b21b6;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700;margin:2px">${i+1}. ${v}</span>`).join('')
+            : '<span style="color:#94a3b8">No visit history recorded</span>'}
+        </div>
+      </div>
+    `;
+    // Add edit button to modal header
+    const editBtn = document.createElement('button');
+    editBtn.textContent = '✏️ Edit';
+    editBtn.style = 'background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-left:10px';
+    editBtn.onclick = () => { closeModal(); openEditModal(p); };
+    const mh = document.querySelector('.modal-header');
+    const existingEdit = mh.querySelector('.edit-btn-dyn');
+    if(existingEdit) existingEdit.remove();
+    editBtn.classList.add('edit-btn-dyn');
+    mh.appendChild(editBtn);
+    document.getElementById('modal').classList.add('open');
+  }).catch(()=>alert('Could not load patient details.'));
+}
+
+function renderEditFollowupDateInputs(count, existingDate) {
+  const container = document.getElementById('edit-followup-date-inputs');
+  const existing = [];
+  container.querySelectorAll('input[type=date]').forEach(i => existing.push(i.value));
+  // Use passed existingDate for first slot if no existing values
+  if(existing.length === 0 && existingDate) existing.push(existingDate);
+  container.innerHTML = '';
+  for(let i = 0; i < count; i++) {
+    const label = count === 1 ? 'Follow-up Date' : `Follow-up ${i+1}`;
+    const inputName = i === 0 ? 'followup_date' : `followup_date_${i+1}`;
+    const val = existing[i] || '';
+    const div = document.createElement('div');
+    div.style.cssText = 'background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;';
+    div.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">${label}</div>
+      <input type="date" name="${inputName}" value="${val}" style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;color:#1a1a2e;background:#fff;width:180px">
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">
+        ${[[7,'+1W'],[14,'+2W'],[21,'+3W'],[30,'+1M'],[42,'+6W'],[60,'+2M']].map(([d,l])=>
+          `<button type="button" onclick="setDateInput(this,${d})" class="quick-date-btn">${l}</button>`
+        ).join('')}
+      </div>
+    `;
+    container.appendChild(div);
+  }
+}
+
+function openEditModal(p) {
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val||''; };
+  set('e-name', p.name); set('e-uhid', p.uhid); set('e-old_new', p.old_new||'New');
+  set('e-age', p.age); set('e-sex', p.sex||''); set('e-phone', p.phone);
+  set('e-doctor', p.doctor); set('e-area', p.area); set('e-product', p.product);
+  set('e-rep', p.rep); set('e-diagnosis', p.diagnosis); set('e-medicine', p.medicine);
+  set('e-visit_date', p.visit_date);
+  set('e-current_status', p.current_status); set('e-notes', p.notes);
+  const cnt = parseInt(p.followup_count)||1;
+  document.getElementById('e-count-display').textContent = cnt;
+  document.getElementById('e-followup_count').value = cnt;
+  document.getElementById('edit-form').dataset.pid = p.id;
+  // Render date pickers with existing followup_date pre-filled
+  renderEditFollowupDateInputs(cnt, p.followup_date);
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEditModal() { document.getElementById('edit-modal').classList.remove('open'); }
+
+function changeEditCount(delta) {
+  const el = document.getElementById('e-count-display');
+  const inp = document.getElementById('e-followup_count');
+  let val = parseInt(el.textContent) + delta;
+  if(val<1) val=1; if(val>10) val=10;
+  el.textContent = val; inp.value = val;
+  renderEditFollowupDateInputs(val);
+}
+
+function submitEdit() {
+  const form = document.getElementById('edit-form');
+  const pid = form.dataset.pid;
+  if(!pid) { alert('Error: No patient selected.'); return; }
+
+  // Collect all dynamic date inputs and set their names correctly
+  const dateContainer = document.getElementById('edit-followup-date-inputs');
+  if(dateContainer) {
+    dateContainer.querySelectorAll('input[type=date]').forEach((inp, i) => {
+      inp.name = i === 0 ? 'followup_date' : `followup_date_${i+1}`;
+    });
+  }
+
+  // Create a hidden form and submit it
+  const hiddenForm = document.createElement('form');
+  hiddenForm.method = 'POST';
+  hiddenForm.action = '/edit_patient/' + pid;
+  hiddenForm.style.display = 'none';
+
+  // Copy all form fields into hidden form
+  const fd = new FormData(form);
+  // Also add date inputs explicitly
+  if(dateContainer) {
+    dateContainer.querySelectorAll('input[type=date]').forEach((inp, i) => {
+      fd.set(i === 0 ? 'followup_date' : `followup_date_${i+1}`, inp.value);
+    });
+  }
+  for(let [key, val] of fd.entries()) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = key;
+    input.value = val;
+    hiddenForm.appendChild(input);
+  }
+
+  document.body.appendChild(hiddenForm);
+  hiddenForm.submit();
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+// Follow-ups filter
+function fuStatusFilter(status, btn) {
+  fuStatusActive = status;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  fuFilter();
+}
+
+function fuFilter() {
+  const query = (document.getElementById('fu-search').value||'').toLowerCase();
+  const fromDate = document.getElementById('fu-from').value||'';
+  const toDate = document.getElementById('fu-to').value||'';
+  let visible = 0;
+  document.querySelectorAll('#fu-table tbody tr').forEach(row=>{
+    const matchSearch = !query || (row.dataset.search||'').includes(query);
+    const matchStatus = fuStatusActive==='all' || row.dataset.status===fuStatusActive;
+    const rowDate = row.dataset.followup||'';
+    const matchDate = (!fromDate&&!toDate) || (rowDate>=(fromDate||'0000') && rowDate<=(toDate||'9999'));
+    const show = matchSearch && matchStatus && matchDate;
+    row.style.display = show ? '' : 'none';
+    if(show) visible++;
+  });
+  const el = document.getElementById('fu-count');
+  el.textContent = (fromDate||toDate) ? visible+' patients found' : '';
+}
+
+function clearFuDate() {
+  document.getElementById('fu-from').value='';
+  document.getElementById('fu-to').value='';
+  document.getElementById('fu-count').textContent='';
+  fuFilter();
+}
+
+// Resolved filter
+function resFilter() {
+  const query = (document.getElementById('res-search').value||'').toLowerCase();
+  const fromDate = document.getElementById('res-from').value||'';
+  const toDate = document.getElementById('res-to').value||'';
+  let visible = 0;
+  document.querySelectorAll('#res-table tbody tr').forEach(row=>{
+    const matchSearch = !query || (row.dataset.search||'').includes(query);
+    const rowDate = row.dataset.resolved||'';
+    const matchDate = (!fromDate&&!toDate) || (rowDate>=(fromDate||'0000') && rowDate<=(toDate||'9999'));
+    const show = matchSearch && matchDate;
+    row.style.display = show ? '' : 'none';
+    if(show) visible++;
+  });
+  const el = document.getElementById('res-count');
+  el.textContent = (fromDate||toDate) ? visible+' cases found' : '';
+}
+
+function clearResDate() {
+  document.getElementById('res-from').value='';
+  document.getElementById('res-to').value='';
+  document.getElementById('res-count').textContent='';
+  resFilter();
+}
+
+  // Smart date quick-set for Edit modal
+  function setEditFollowup(days) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    const iso = d.toISOString().split('T')[0];
+    const el = document.getElementById('e-followup_date');
+    if(el) el.value = iso;
+  }
+
+  // Diagnosis filter
+  function fuFilter() {
+    const query = (document.getElementById('fu-search').value||'').toLowerCase();
+    const diagFilter = (document.getElementById('fu-diagnosis').value||'').toLowerCase();
+    const fromDate = document.getElementById('fu-from').value||'';
+    const toDate = document.getElementById('fu-to').value||'';
+    let visible = 0;
+    document.querySelectorAll('#fu-table tbody tr').forEach(row=>{
+      const matchSearch = !query || (row.dataset.search||'').includes(query);
+      const matchDiag = !diagFilter || (row.dataset.search||'').includes(diagFilter);
+      const matchStatus = fuStatusActive==='all' || row.dataset.status===fuStatusActive;
+      const rowDate = row.dataset.followup||'';
+      const matchDate = (!fromDate&&!toDate)||(rowDate>=(fromDate||'0000')&&rowDate<=(toDate||'9999'));
+      const show = matchSearch && matchDiag && matchStatus && matchDate;
+      row.style.display = show?'':'none';
+      if(show) visible++;
+    });
+    const el = document.getElementById('fu-count');
+    if(el) el.textContent = (fromDate||toDate||diagFilter) ? visible+' patients found' : '';
+  }
+</script>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal" style="max-width:720px">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Edit Patient</div>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <form id="edit-form" method="POST">
+      <div class="form-grid">
+        <div class="form-group"><label>Patient Name *</label><input type="text" name="name" id="e-name" required></div>
+        <div class="form-group"><label>UHID No</label><input type="text" name="uhid" id="e-uhid"></div>
+        <div class="form-group"><label>Old / New</label><select name="old_new" id="e-old_new"><option value="New">New</option><option value="Old">Old</option></select></div>
+        <div class="form-group"><label>Age</label><input type="number" name="age" id="e-age" min="0" max="120"></div>
+        <div class="form-group"><label>Sex</label><select name="sex" id="e-sex"><option value="">Select</option><option value="M">Male</option><option value="F">Female</option><option value="Other">Other</option></select></div>
+        <div class="form-group"><label>Phone</label><input type="tel" name="phone" id="e-phone"></div>
+        <div class="form-group"><label>Doctor</label><input type="text" name="doctor" id="e-doctor"></div>
+        <div class="form-group"><label>Area / Address</label><input type="text" name="area" id="e-area"></div>
+        <div class="form-group"><label>Product</label><input type="text" name="product" id="e-product"></div>
+        <div class="form-group"><label>Rep</label><input type="text" name="rep" id="e-rep"></div>
+        <div class="form-group"><label>Diagnosis</label><input type="text" name="diagnosis" id="e-diagnosis"></div>
+        <div class="form-group"><label>Medicine</label><input type="text" name="medicine" id="e-medicine"></div>
+        <div class="form-group"><label>Visit Date</label><input type="date" name="visit_date" id="e-visit_date"></div>
+        <div class="form-group"><label>Current Status</label><input type="text" name="current_status" id="e-current_status"></div>
+        <div class="form-group">
+          <label>Follow-up Count</label>
+          <div style="display:flex;align-items:center;gap:0;margin-top:4px">
+            <div class="counter-group">
+              <button type="button" class="counter-btn" onclick="changeEditCount(-1)">−</button>
+              <span class="counter-val" id="e-count-display">1</span>
+              <button type="button" class="counter-btn" onclick="changeEditCount(1)">+</button>
+            </div>
+            <input type="hidden" name="followup_count" id="e-followup_count" value="1">
+          </div>
+        </div>
+        <div class="form-group full" id="edit-followup-dates-container">
+          <label>Follow-up Date(s)</label>
+          <div id="edit-followup-date-inputs" style="display:flex;flex-direction:column;gap:10px;margin-top:6px"></div>
+        </div>
+        <div class="form-group full"><label>Remarks / Notes</label><textarea name="notes" id="e-notes"></textarea></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button type="button" onclick="submitEdit()" class="btn-submit">💾 Save Changes</button>
+        <button type="button" onclick="closeEditModal()" style="padding:12px 24px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;font-size:15px;cursor:pointer;font-weight:600;color:#64748b">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

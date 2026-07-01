@@ -29,37 +29,14 @@ def save_profile(profile):
     with open(PROFILE_FILE, 'w', encoding='utf-8') as f:
         json.dump(profile, f, indent=2)
 
-def extract_followup_date(text):
-    import re
-    from datetime import date
-    if not text:
-        return None
-    text=str(text).strip()
-    invalid={"already","not interested","not intrerested","incoming not available","all good","not answered","call not answered","rude response","invalid","will come soon"}
-    if text.lower() in invalid:
-        return None
-    m=re.search(r'(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})',text)
-    if not m:
-        return None
-    d,mth,y=map(int,m.groups())
-    if y<100:
-        y+=2000
-    try:
-        return date(y,mth,d)
-    except:
-        return None
-
 def get_status(followup_date_str):
-    followup=extract_followup_date(followup_date_str)
-    if followup is None:
-        return "upcoming"
-    today=date.today()
-    if followup<today:
-        return "overdue"
-    elif followup==today:
-        return "today"
-    else:
-        return "upcoming"
+    try:
+        followup = datetime.strptime(followup_date_str, "%Y-%m-%d").date()
+        today = date.today()
+        if followup < today: return "overdue"
+        elif followup == today: return "today"
+        else: return "upcoming"
+    except: return "upcoming"
 
 @app.route('/')
 def index():
@@ -68,7 +45,7 @@ def index():
     active = data.get("active", [])
     for p in active:
         p['status'] = get_status(p.get('followup_date', ''))
-    active_sorted = sorted(active, key=lambda x: extract_followup_date(x.get("followup_date")) or date.max)
+    active_sorted = sorted(active, key=lambda x: x.get('followup_date', '9999-99-99'))
     today_count   = sum(1 for p in active if p['status'] == 'today')
     overdue_count = sum(1 for p in active if p['status'] == 'overdue')
     upcoming_count= sum(1 for p in active if p['status'] == 'upcoming')
@@ -84,7 +61,8 @@ def index():
     ]
     for offset, label, color, bg in day_configs:
         day = date.today() + timedelta(days=offset)
-        day_patients = [p for p in active if extract_followup_date(p.get("followup_date")) == day]
+        day_str = day.strftime("%Y-%m-%d")
+        day_patients = [p for p in active if p.get('followup_date') == day_str]
         upcoming_days.append({
             "label": label,
             "date_display": day.strftime("%d %b"),
@@ -211,9 +189,9 @@ def save_profile_route():
 @app.route('/api/today_followups')
 def today_followups():
     data = load_data()
-    today = date.today()
-    today_p=[p for p in data.get("active",[]) if extract_followup_date(p.get("followup_date"))==today]
-    overdue=[p for p in data.get("active",[]) if extract_followup_date(p.get("followup_date")) is not None and extract_followup_date(p.get("followup_date"))<today]
+    today_str = date.today().strftime("%Y-%m-%d")
+    today_p  = [p for p in data.get("active",[]) if p.get('followup_date') == today_str]
+    overdue  = [p for p in data.get("active",[]) if p.get('followup_date','') < today_str]
     return jsonify({"today": today_p, "overdue": overdue})
 
 @app.route('/export')

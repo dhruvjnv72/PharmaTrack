@@ -1,4 +1,7 @@
 flask
 twilio
 schedule
-gunicorn 
+gunicorn
+SQLAlchemy
+Flask-SQLAlchemy
+psycopg2-binary 
